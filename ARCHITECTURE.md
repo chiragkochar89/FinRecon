@@ -63,19 +63,20 @@
 ## Tier Responsibilities
 
 ### 1. Presentation Layer (Frontend — `frontend/`)
-* **Technology**: React 18, TypeScript, Vite, TailwindCSS, Recharts, Lucide Icons.
+* **Technology**: React 18, TypeScript, Vite, Custom Enterprise CSS (Responsive CSS Grid, Scoped CSS Modules), Recharts, Lucide Icons.
 * **Responsibilities**:
-  * Render operational KPIs, batch pipeline status steps, transaction ledger search, and exception management drawers.
+  * Render operational KPIs, batch pipeline execution stream with live telemetry cards, transaction ledger search, and exception management drawers.
   * Prominently display active system execution mode (`MODE: LOCAL_DEMO` or `MODE: REAL_MAINFRAME`).
   * Enforce client-side input file validation before batch submission.
-  * Render Demo Identity selector (`ANALYST_01`, `ANALYST_02`, `SUPERVISOR_01`) for testing RBAC rules.
+  * Provide enterprise login portal (`LoginPage.tsx`) with session context (`AuthContext.tsx`), automatic unauthenticated routing, and role-based UI access control (`USER` vs `SUPERVISOR`).
 
 ### 2. Service & Adapter Layer (Backend — `backend/`)
-* **Technology**: FastAPI, Pydantic v2, Uvicorn, SQLite (`data/finrecon_local.db`).
+* **Technology**: FastAPI, Pydantic v2, Uvicorn, Argon2id (`argon2-cffi`), SQLite (`data/finrecon_local.db`).
 * **Responsibilities**:
-  * Expose REST API endpoints for file validation, batch orchestration, batch status monitoring and API-based status polling, exception filtering, and operational audit logging.
+  * Expose REST API endpoints for secure authentication (`/api/v1/auth`), file validation, batch orchestration, batch telemetry stream, exception filtering, and operational audit logging.
   * Provide clean `MainframeAdapter` abstraction (`RealMainframeAdapter` vs `LocalDemoAdapter`).
-  * Enforce server-side Role-Based Access Control (`ANALYST` vs `SUPERVISOR`).
+  * Enforce server-side Role-Based Access Control (`USER` / `ANALYST` vs `SUPERVISOR`) via Bearer session tokens, session cookies, and test header fallback.
+  * Enforce account lockout protection after 5 consecutive failed login attempts.
   * Generate auditor-ready CSV, Excel (`openpyxl`), and PDF (`ReportLab`) report packages.
   * Route job requests without executing core financial business logic inside Python/JavaScript.
 
@@ -167,17 +168,20 @@ All triage actions produce append-only audit events logged via `AuditRepository`
 * **Role**: Embedded persistent store exclusively for `LOCAL_DEMO` operational triage state (investigation notes, assignee history, terminal resolutions, append-only audit trail).
 * **Isolation**: Strictly separated from z/OS batch processing. Financial fields remain 100% read-only and immutable.
 
-### 2. Server-Side Role-Based Access Control (RBAC)
+### 2. Server-Side Role-Based Access Control (RBAC) & Authentication
 ```
                ┌──────────────────────────────────────────────┐
                │              CLIENT REQUEST                  │
-               │   Headers: X-User-Name, X-User-Role          │
+               │  Header: Authorization: Bearer <session_tok> │
+               │  Cookie: session_token=<session_tok>         │
+               │  Fallback: X-User-Name, X-User-Role (test)   │
                └──────────────────────┬───────────────────────┘
                                       │
                                       ▼
                ┌──────────────────────────────────────────────┐
                │    get_user_context() Dependency             │
-               │  Extract Identity & Role (ANALYST/SUPERVISOR) │
+               │  Validate Session via AuthService & DB       │
+               │  Extract Identity & Role (USER/SUPERVISOR)   │
                └──────────────────────┬───────────────────────┘
                                       │
                  ┌────────────────────┴────────────────────┐
@@ -187,7 +191,7 @@ All triage actions produce append-only audit events logged via `AuditRepository`
                  │                                         │
                  ▼                                         ▼
         Allowed for All                       Role == SUPERVISOR?
-       (ANALYST & SUPERVISOR)                     /         \
+       (USER & SUPERVISOR)                        /         \
                                                 YES          NO
                                                  │            │
                                                  ▼            ▼

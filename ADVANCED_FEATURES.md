@@ -40,8 +40,10 @@ RECOVERED  RECOVERY_FAILED (ESCALATED)
 ### Financial Invariants
 The system strictly enforces monetary and record count conservation equations:
 ```text
-Bank Source Total ($62,525.00) = Matched Amount ($37,515.00) + Amount Mismatch Amount ($6,252.50) + Status Mismatch Amount ($6,252.50) + Missing Merchant Amount ($12,505.00)
+Bank Source Total ($94,136.00) = Matched ($37,515.00) + Amt Mismatch ($6,252.50) + Stat Mismatch ($6,252.50) + Missing Merch ($44,116.00)
+Merch Source Total ($60,817.50) = Matched ($37,515.00) + Amt Mismatch ($7,500.00) + Stat Mismatch ($6,252.50) + Missing Bank ($9,550.00)
 ```
+*(Note: Replaces historical prototype baseline total of $62,525.00 with verified dynamic reconciliation calculation).*
 
 ---
 
@@ -130,7 +132,7 @@ The secondary AI engine **never** overwrites financial source data. Original ban
 
 ## 5. TESTING & VERIFICATION RESULTS
 
-- **Pytest Automated Test Suite**: `61 / 61 passed` (`100%`)
+- **Pytest Automated Test Suite**: `114 / 114 passed across 11 modules` (`100%`)
 - **Frontend Production Build (Vite/TypeScript)**: `0 errors` (`built in 6.53s`)
 - **Faculty Assignment Suite (1–4)**: `Passed`
 - **Security & Immutability Verification**: `Passed`

@@ -35,10 +35,10 @@ Traditional systems log exceptions into static mainframe print datasets, requiri
 
 ---
 
-## Key Features
-
 - ⚡ **Dual Execution Modes**: `LOCAL_DEMO` (local behavioral reproduction & SQLite persistence) and `REAL_MAINFRAME` (z/OS z/OSMF / JES job submission adapter).
-- 📊 **Monetary Control Totals**: Automated accounting equation balancing ($\text{Bank Total} = \text{Matched} + \text{Discrepancies} + \text{Missing}$) and control-total validation.
+- 🔐 **Secure Authentication & RBAC**: Argon2id password hashing, bearer session tokens, and an enterprise login portal supporting `USER` and `SUPERVISOR` roles with account lockout protection.
+- 🔄 **State-Driven Pipeline Execution**: Interactive 8-stage batch stream (`PENDING` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `COMPLETED` / `FAILED_CONTROL` $\rightarrow$ `RECOVERED`) with stage-level telemetry cards and pipeline reset.
+- 📊 **Monetary Control Totals**: Automated accounting equation balancing ($\text{Bank Total} = \text{Matched} + \text{Discrepancies} + \text{Missing}$) and dynamic control-total validation.
 - 🛠️ **Exception Triage State Machine**: Strict lifecycle state transitions (`UNASSIGNED` $\rightarrow$ `IN_REVIEW` $\rightarrow$ `RESOLVED` / `REJECTED`) with mandatory resolution codes and investigation notes.
 - 🔒 **Server-Side RBAC Enforcement**: Role-based access control preventing unauthorized case resolutions or report downloads.
 - 📑 **Auditor Export Engine**: On-demand generation of Exceptions CSV, Audit Trail CSV, multi-tab Excel workbooks (`openpyxl`), and Auditor Summary PDF reports (`ReportLab`).
@@ -159,24 +159,41 @@ stateDiagram-v2
 
 ## Security & Role-Based Access Control (RBAC)
 
-FinRecon enforces server-side Role-Based Access Control (RBAC) across all API endpoints:
+FinRecon enforces end-to-end security and server-side Role-Based Access Control (RBAC) across all API endpoints:
 
-- **`ANALYST` Role**: Permitted to view dashboards, search transactions, filter exceptions, assign cases to self/others, and append investigation notes. Restricted from resolving/rejecting cases or downloading export reports.
-- **`SUPERVISOR` Role**: Full operational privileges, including case resolution/rejection and generating auditor reports.
-- **Server-Side Enforcement**: Requests by `ANALYST` attempting restricted status transitions or report exports are rejected with `HTTP 403 Forbidden` and logged as `SECURITY_DENIED` audit events.
+- **Authentication Infrastructure**: Password hashing via Argon2id (`argon2-cffi`), session token issuance (Bearer token header and session cookies), dedicated login portal (`/login`), and session termination (`/logout`).
+- **Account Lockout & Audit**: Consecutive failed login attempts trigger account lockouts (5 attempts threshold); all authentication events (`LOGIN_SUCCESS`, `LOGIN_FAILURE`, `LOGOUT`) are recorded in the append-only audit trail.
+- **Role Hierarchy**:
+  - **`USER` / `ANALYST` Role**: Permitted to view dashboards, search transactions, execute reconciliation batches, filter exceptions, assign cases to self/others, and append investigation notes. Restricted from resolving/rejecting cases or downloading export reports.
+  - **`SUPERVISOR` Role**: Full operational privileges, including case resolution/rejection and generating auditor reports.
+- **Server-Side Enforcement**: Unauthenticated requests receive `HTTP 401 Unauthorized`. Restricted operational transitions or export attempts by `USER`/`ANALYST` are rejected with `HTTP 403 Forbidden` and logged as `SECURITY_DENIED` audit events.
+- **Local Demonstration Credentials**:
+  - Operational User: `finrecon_user` / `FinReconUser2026!` (Role: `USER`, mapped to `ANALYST`)
+  - Supervisor: `finrecon_supervisor` / `FinReconSuper2026!` (Role: `SUPERVISOR`)
+  > [!NOTE]
+  > These credentials are local demonstration credentials intended strictly for local evaluation and automated testing. They are provisioned automatically via `backend/scripts/bootstrap_users.py`.
 - **Security Response Headers**: HTTP responses enforce `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`, `Referrer-Policy: strict-origin-when-cross-origin`, and legacy `X-XSS-Protection: 1; mode=block` headers.
 
 ---
 
 ## Financial Control Totals & Monetary Balancing
 
-The platform validates monetary balancing using the financial accounting control equation:
+The platform validates monetary balancing using dynamic financial accounting control equations calculated directly from input feeds:
 
-$$\text{Bank Source Total} = \text{Matched Amount} + \text{Amount Mismatch Amount} + \text{Status Mismatch Amount} + \text{Missing Merchant Amount}$$
+$$\text{Bank Source Total} = \text{Matched} + \text{Amount Mismatch (Bank)} + \text{Status Mismatch (Bank)} + \text{Missing Merchant}$$
+$$\$94,136.00 = \$37,515.00 + \$6,252.50 + \$6,252.50 + \$44,116.00 \quad \checkmark \text{ (BALANCED)}$$
 
-$$\$62,525.00 = \$37,515.00 + \$6,252.50 + \$6,252.50 + \$12,505.00 \quad \checkmark \text{ (BALANCED)}$$
+$$\text{Merchant Source Total} = \text{Matched} + \text{Amount Mismatch (Merch)} + \text{Status Mismatch (Merch)} + \text{Missing Bank}$$
+$$\$60,817.50 = \$37,515.00 + \$7,500.00 + \$6,252.50 + \$9,550.00 \quad \checkmark \text{ (BALANCED)}$$
 
-If total input monetary amount does not equal total output monetary amount, the system flags a monetary balancing discrepancy (`RC=12`).
+- **Bank Feed Input**: 50 deduplicated records totaling **$94,136.00** (processed from 100 raw input records).
+- **Merchant Feed Input**: 50 records totaling **$60,817.50**.
+- **Matched Volume**: 30 records totaling **$37,515.00**.
+- **Net Monetary Discrepancy** (Amount Mismatches RCN-101): $|\$6,252.50 - \$7,500.00| = \mathbf{\$1,247.50}$ (5 records).
+- **Total Exception Exposure** (Cumulative Discrepancies): **$54,913.50** across 30 exception records.
+- **Net Source Variance**: $|\$94,136.00 - \$60,817.50| = \mathbf{\$33,318.50}$.
+
+If total input monetary amount does not equal total output monetary disposition, the engine flags a monetary balancing discrepancy (`RC=12`).
 
 ---
 
@@ -195,9 +212,9 @@ FinRecon includes an auditor-ready reporting engine supporting four export forma
 
 | Layer | Technologies Used |
 | :--- | :--- |
-| **Frontend UI** | React 18, TypeScript, Vite, TailwindCSS, Recharts, Lucide Icons |
-| **Backend API** | Python 3.10+, FastAPI, Pydantic v2, Uvicorn |
-| **Operational Persistence** | SQLite (`data/finrecon_local.db`) for `LOCAL_DEMO` operational triage state |
+| **Frontend UI** | React 18, TypeScript, Vite, Custom Enterprise CSS (Responsive CSS Grid, Scoped CSS Modules), Recharts, Lucide Icons |
+| **Backend API** | Python 3.10+, FastAPI, Pydantic v2, Uvicorn, Argon2id (`argon2-cffi`) |
+| **Operational Persistence** | SQLite (`data/finrecon_local.db`) for `LOCAL_DEMO` operational triage state & users |
 | **Mainframe Processing** | z/OS JCL, IBM DFSORT, IBM Enterprise COBOL, TSO REXX, Fixed-Length PS Datasets |
 | **Report Generation** | `openpyxl` (Excel), `reportlab` (PDF), Python Standard `csv` |
 | **Automated Testing** | `pytest`, FastAPI `TestClient`, Python Standard `unittest` |
@@ -212,20 +229,25 @@ FinRecon/
 ├── PROJECT_AUDIT.md                    <-- Complete Final Project Audit & Implementation Status
 ├── ARCHITECTURE.md                     <-- System Architecture Specification
 ├── TEST_PLAN.md                        <-- Master Test Plan & Final Validation Report
+├── ADVANCED_FEATURES.md                <-- Advanced Features & Self-Healing Architecture
+├── PRE_GITHUB_AUDIT_REPORT.md          <-- Pre-Release Audit & Verification Report
 ├── start_finrecon.bat                  <-- 1-Click Windows Local Startup Batch Script
 ├── backend/
 │   ├── app/
 │   │   ├── adapters/                   <-- Dual-Mode Mainframe Adapter (LocalDemo & RealMainframe)
-│   │   ├── api/                        <-- FastAPI REST Routes & RBAC Dependencies
+│   │   ├── api/                        <-- FastAPI REST Routes (Auth, Batch, Triage, Reports)
 │   │   ├── core/                       <-- Application Settings & Configuration
-│   │   ├── db/                         <-- SQLite Persistent Operational Storage
+│   │   ├── db/                         <-- SQLite Persistent Storage (Users, Sessions, Triage)
 │   │   ├── models/                     <-- Pydantic Data Models & Enums
-│   │   ├── repositories/               <-- SQLite Exception & Audit Repositories
-│   │   ├── services/                   <-- Reconciliation & Report Generator Services
+│   │   ├── repositories/               <-- SQLite Exception, Audit & User Repositories
+│   │   ├── services/                   <-- Reconciliation, Report & Auth Services
 │   │   └── main.py                     <-- FastAPI Main Application Entrypoint
 │   ├── data/
-│   │   └── finrecon_local.db           <-- LOCAL_DEMO Operational SQLite Store
-│   ├── tests/                          <-- Backend API Unit Tests
+│   │   └── finrecon_local.db           <-- LOCAL_DEMO Operational SQLite Store (Git-Ignored)
+│   ├── scripts/
+│   │   └── bootstrap_users.py          <-- Demo User Provisioning & Argon2id Password Hasher
+│   ├── tests/
+│   │   └── test_api.py                 <-- Backend API Base Tests
 │   └── requirements.txt                <-- Python Dependencies
 ├── cobol/                              <-- Active COBOL Source Files
 │   ├── FINREC01.CBL                    <-- COBOL 5-Way Reconciliation Engine
@@ -246,11 +268,12 @@ FinRecon/
 │   └── VSAM_DB2_ARCHITECTURE.md        <-- VSAM KSDS & DB2 Specifications
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                 <-- UI Components (Header, Sidebar, Navigation)
-│   │   ├── pages/                      <-- Dashboard, Batch, Transactions, Exceptions, Reports Pages
-│   │   ├── services/                   <-- Frontend API Client & HTTP Interceptors
+│   │   ├── components/                 <-- UI Components (Header, Sidebar, Navigation, Checkpoints)
+│   │   ├── context/                    <-- AuthContext & Session State Management
+│   │   ├── pages/                      <-- LoginPage, Dashboard, Batch, Transactions, Exceptions, Reports
+│   │   ├── services/                   <-- Frontend API Client & Auth Interceptors
 │   │   ├── types/                      <-- TypeScript Data Interfaces
-│   │   ├── App.tsx                     <-- React Main App Component
+│   │   ├── App.tsx                     <-- React Main App Component & Protected Routing
 │   │   └── main.tsx                    <-- React Entrypoint
 │   ├── package.json                    <-- Node.js Dependencies & Build Scripts
 │   ├── tsconfig.json                   <-- TypeScript Compiler Configuration
@@ -271,10 +294,17 @@ FinRecon/
 ├── reports/                            <-- Staged Report Output Directory
 ├── rexx/                               <-- Active REXX Source Files
 │   └── FINREXX.REX                     <-- Assignment 3 REXX Audit Processor
-└── tests/                              <-- Integration & System Test Suites
+└── tests/                              <-- Integration & System Test Suites (114 Total Tests)
+    ├── test_advanced_features.py
+    ├── test_authentication_rbac.py
+    ├── test_financial_integrity.py
     ├── test_phase3_controls.py
     ├── test_phase4_triage.py
-    └── test_phase5_security_export.py
+    ├── test_phase5_security_export.py
+    ├── test_phase7b_reconciliation.py
+    ├── test_phase7d_sync_and_integrity.py
+    ├── test_pipeline_execution.py
+    └── test_transaction_detail_consistency.py
 ```
 
 ---
@@ -340,6 +370,11 @@ npm run dev
 
 Open your browser to: **[`http://localhost:5173`](http://localhost:5173)**
 
+> [!NOTE]
+> The frontend automatically routes unauthenticated sessions to the enterprise login screen (`/login`). You can log in using either pre-seeded local demo account:
+> - **Operational User / Analyst**: `finrecon_user` / `FinReconUser2026!`
+> - **Supervisor**: `finrecon_supervisor` / `FinReconSuper2026!`
+
 ---
 
 ## Automated Testing & Validation
@@ -347,7 +382,7 @@ Open your browser to: **[`http://localhost:5173`](http://localhost:5173)**
 Run all automated test suites to verify system health:
 
 ```powershell
-# Run complete Pytest test suite (61 automated tests — 61/61 PASSED)
+# Run complete Pytest test suite (114 automated tests across 11 modules — 114/114 PASSED)
 python -m pytest tests/ backend/tests/ -v
 ```
 
@@ -374,12 +409,12 @@ The complete system workflow has been manually verified:
 
 1. **System Health Check**: API ONLINE (`MODE: LOCAL_DEMO`, Service: FinRecon, Version: 2.0.0).
 2. **File Validation**: Input datasets (`FINRECON.INPUT.BANK.txt`, `FINRECON.INPUT.MERCHANT.txt`, `FINRECON.INPUT.AUDIT.txt`) validated for fixed-length formatting (80B and 100B).
-3. **Batch Pipeline Execution**: Pipeline steps `STEP01` through `STEP07` completed successfully (`MAXCC=04`).
+3. **Batch Pipeline Execution**: Pipeline steps `STEP01` through `STEP07` completed successfully (`MAXCC=04`) with state-driven telemetry stream.
 4. **Transaction Search**: Transaction `TXN10001` inspected and verified as `MATCHED` (`RCN-000`).
 5. **Operational Triage**: Exception `EXC-10031` / `TXN10031` investigated.
-6. **Analyst Review**: `ANALYST_01` assigned case and added investigation notes.
-7. **RBAC Denial**: `ANALYST_01` resolution attempt correctly rejected with `HTTP 403 Forbidden` and `SECURITY_DENIED` logged.
-8. **Supervisor Resolution**: `SUPERVISOR_01` resolved case with resolution code `RESOLVED_DATA_CORRECTION` and mandatory notes.
+6. **Analyst Review**: `finrecon_user` assigned case and added investigation notes.
+7. **RBAC Denial**: `finrecon_user` resolution attempt correctly rejected with `HTTP 403 Forbidden` and `SECURITY_DENIED` logged.
+8. **Supervisor Resolution**: `finrecon_supervisor` resolved case with resolution code `RESOLVED_DATA_CORRECTION` and mandatory notes.
 9. **Report Export**: CSV, Excel (`.xlsx`), and PDF (`.pdf`) auditor reports generated and verified.
 
 ---
@@ -388,17 +423,16 @@ The complete system workflow has been manually verified:
 
 Manually verified operational metrics after batch execution and initial triage:
 
-- **Bank Input Records Read**: 50 records ($62,525.00)
-- **Merchant Input Records Read**: 50 records ($63,772.50)
+- **Bank Input Records Read**: 50 records ($94,136.00, deduplicated from 100 raw records)
+- **Merchant Input Records Read**: 50 records ($60,817.50)
 - **Matched Transactions**: 30 records ($37,515.00)
-- **Total Exceptions Generated**: 30 records (5 Amount Mismatches, 5 Status Mismatches, 20 Missing)
-- **Open Operational Cases**: 29 cases
-- **Resolved Operational Cases**: 1 case
-- **Total Audit Events Logged**: 41 events
-- **Open Financial Exposure**: $26,008.00 *(Operational triage metric representing exposure of remaining open cases)*
+- **Total Exceptions Generated**: 30 records (5 Amount Mismatches, 5 Status Mismatches, 10 Missing in Bank, 10 Missing in Merchant)
+- **Open Financial Exposure**: $54,913.50 *(Cumulative monetary exposure of discrepancy and missing records)*
+- **Net Amount Discrepancy**: $1,247.50 *(Amount mismatch difference between Bank $6,252.50 and Merchant $7,500.00)*
+- **Net Source Variance**: $33,318.50 *(Variance between total Bank $94,136.00 and Merchant $60,817.50)*
 - **Accounting Control Equation**: `BALANCED (PASS)`
 - **Control Total Validation**: `PASSED (RC=00)`
-- **DFSORT Duplicates Removed**: 10 bank duplicates, 15 audit duplicates
+- **DFSORT Duplicates Removed**: 10 bank duplicates (100 -> 90), 15 audit duplicates (120 -> 105)
 
 ---
 
@@ -417,7 +451,7 @@ All four auditor export formats have been generated and manually verified:
 
 1. **`REAL_MAINFRAME` Integration**: Requires a configured IBM z/OS host environment and is unconfigured in the current local demonstration setup.
 2. **`LOCAL_DEMO` Persistence**: Uses embedded SQLite (`finrecon_local.db`) for operational state management rather than an enterprise mainframe database.
-3. **Demo Identity Selector**: The frontend identity switcher is a demonstration mechanism for testing RBAC rules and is not an enterprise Single Sign-On (SSO) implementation.
+3. **Local Demonstration Credentials**: The platform implements Argon2id hashing and session tokens with pre-seeded demo accounts (`finrecon_user`, `finrecon_supervisor`) for local testing. In enterprise environments, this layer would integrate with Single Sign-On (SSO / SAML 2.0 / OIDC).
 4. **SQLite Scope**: SQLite is strictly used for operational triage state in `LOCAL_DEMO` mode and is not presented as the production system of record for Mainframe financial data.
 5. **Demonstration Environment**: The platform is an academic/enterprise demonstration platform and is not connected to live production banking networks.
 
@@ -437,7 +471,7 @@ All four auditor export formats have been generated and manually verified:
 ## Future Integration Opportunities
 
 - **z/OSMF REST API Integration**: Complete live z/OS job submission, spool retrieval, and dataset streaming via `RealMainframeAdapter`.
-- **Enterprise SSO / OAuth2**: Integrate OpenID Connect / SAML 2.0 authentication replacing the demo identity selector.
+- **Enterprise SSO / OAuth2**: Integrate OpenID Connect / SAML 2.0 authentication for corporate directory federation.
 - **DB2 / VSAM Integration**: Migrate operational triage store to DB2 for z/OS or VSAM KSDS datasets.
 
 ---
@@ -446,7 +480,7 @@ All four auditor export formats have been generated and manually verified:
 
 - **Project Name**: FinRecon — Financial Transaction Processing & Automated Reconciliation Platform
 - **Architecture**: Hybrid z/OS Mainframe Batch & Web Platform
-- **Implementation**: Phases 1–6 completed
+- **Implementation**: Phases 1–8 completed
 - **Status**: Completed — LOCAL_DEMO validated; REAL_MAINFRAME integration unconfigured
 
 ### Team & Contributors
