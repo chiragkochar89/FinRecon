@@ -1,0 +1,124 @@
+//MASTER    JOB (FINRECON),'MASTER BATCH CONTROLLER',
+//             CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//*-------------------------------------------------------------------*
+//* FINRECON - MASTER BATCH ORCHESTRATOR                              *
+//* INTEGRATES ASSIGNMENTS 1, 2, 3 AND 4 INTO A SINGLE PIPELINE       *
+//*-------------------------------------------------------------------*
+//* STEP 1: ALLOCATE / CLEANUP ALL PIPELINE DATASETS                 *
+//*-------------------------------------------------------------------*
+//CLEANUP  EXEC PGM=IEFBR14
+//DELWRKB  DD DSN=&HLQ..FINRECON.WORK.BANK,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELWRKM  DD DSN=&HLQ..FINRECON.WORK.MERCHANT,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELMAT   DD DSN=&HLQ..FINRECON.OUTPUT.MATCHED,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELEXC   DD DSN=&HLQ..FINRECON.OUTPUT.EXCEPTION,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELMIS   DD DSN=&HLQ..FINRECON.OUTPUT.MISSING,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELWRKA  DD DSN=&HLQ..FINRECON.WORK.AUDIT,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELVAL   DD DSN=&HLQ..FINRECON.OUTPUT.VALIDATE,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//DELRPT   DD DSN=&HLQ..FINRECON.REPORT.SUMMARY,
+//            DISP=(MOD,DELETE,DELETE),UNIT=SYSDA,SPACE=(TRK,(1,1))
+//*-------------------------------------------------------------------*
+//* STEP 2: ASSIGNMENT 1 — DFSORT DEDUPLICATION & SORTING             *
+//*-------------------------------------------------------------------*
+//STEP01   EXEC PGM=SORT
+//SYSOUT   DD SYSOUT=*
+//SORTIN   DD DSN=&HLQ..FINRECON.INPUT.BANK,DISP=SHR
+//SORTOUT  DD DSN=&HLQ..FINRECON.WORK.BANK,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//SYSIN    DD *
+  SORT FIELDS=(13,8,CH,A)
+  SUM FIELDS=NONE
+/*
+//*-------------------------------------------------------------------*
+//* STEP 3: PRE-SORT MERCHANT FEED FOR COBOL RECON                   *
+//*-------------------------------------------------------------------*
+//STEP02S  EXEC PGM=SORT,COND=(0,NE,STEP01)
+//SYSOUT   DD SYSOUT=*
+//SORTIN   DD DSN=&HLQ..FINRECON.INPUT.MERCHANT,DISP=SHR
+//SORTOUT  DD DSN=&HLQ..FINRECON.WORK.MERCHANT,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//SYSIN    DD *
+  SORT FIELDS=(21,8,CH,A)
+  SUM FIELDS=NONE
+/*
+//*-------------------------------------------------------------------*
+//* STEP 4: ASSIGNMENT 2 — COBOL RECONCILIATION ENGINE               *
+//*-------------------------------------------------------------------*
+//STEP02   EXEC PGM=FINREC01,COND=(0,NE,STEP02S)
+//STEPLIB  DD DSN=&HLQ..FINRECON.LOAD,DISP=SHR
+//BANKIN   DD DSN=&HLQ..FINRECON.WORK.BANK,DISP=SHR
+//MERCHIN  DD DSN=&HLQ..FINRECON.WORK.MERCHANT,DISP=SHR
+//MATCHOUT DD DSN=&HLQ..FINRECON.OUTPUT.MATCHED,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//EXCPOUT  DD DSN=&HLQ..FINRECON.OUTPUT.EXCEPTION,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//MISSOUT  DD DSN=&HLQ..FINRECON.OUTPUT.MISSING,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//SYSOUT   DD SYSOUT=*
+/*
+//*-------------------------------------------------------------------*
+//* STEP 5: ASSIGNMENT 3 — REXX AUDIT PROCESSOR                      *
+//*-------------------------------------------------------------------*
+//STEP03A  EXEC PGM=IEFBR14,COND=(4,LT,STEP02)
+//WORKAUD  DD DSN=&HLQ..FINRECON.WORK.AUDIT,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=100,BLKSIZE=27900)
+//STEP03   EXEC PGM=IKJEFT01,DYNAMNBR=30,COND=(4,LT,STEP02)
+//SYSPROC  DD DSN=&HLQ..FINRECON.REXX,DISP=SHR
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+  %FINREXX &HLQ..FINRECON.INPUT.AUDIT &HLQ..FINRECON.WORK.AUDIT
+/*
+//*-------------------------------------------------------------------*
+//* STEP 6: ASSIGNMENT 4 — JCL CONTROL & RECORD COUNT VALIDATION      *
+//*-------------------------------------------------------------------*
+//STEP04   EXEC PGM=SORT,COND=(4,LT,STEP03)
+//SYSOUT   DD SYSOUT=*
+//SORTIN   DD DSN=&HLQ..FINRECON.WORK.BANK,DISP=SHR
+//SORTOUT  DD DSN=&HLQ..FINRECON.OUTPUT.VALIDATE,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=27920)
+//SYSIN    DD *
+  SORT FIELDS=(13,8,CH,D)
+/*
+//STEP04C  EXEC PGM=ICETOOL,COND=(4,LT,STEP04)
+//TOOLMSG  DD SYSOUT=*
+//DFSMSG   DD SYSOUT=*
+//INFILE   DD DSN=&HLQ..FINRECON.WORK.BANK,DISP=SHR
+//OUTFILE  DD DSN=&HLQ..FINRECON.OUTPUT.VALIDATE,DISP=SHR
+//TOOLIN   DD *
+  COUNT FROM(INFILE)  EMPTY
+  COUNT FROM(OUTFILE) EMPTY
+/*
+//*-------------------------------------------------------------------*
+//* STEP 7: RECONCILIATION SUMMARY REPORT GENERATION                  *
+//*-------------------------------------------------------------------*
+//STEP05   EXEC PGM=FINRPT01,COND=(4,LT,STEP04C)
+//STEPLIB  DD DSN=&HLQ..FINRECON.LOAD,DISP=SHR
+//MATCHIN  DD DSN=&HLQ..FINRECON.OUTPUT.MATCHED,DISP=SHR
+//EXCPIN   DD DSN=&HLQ..FINRECON.OUTPUT.EXCEPTION,DISP=SHR
+//MISSIN   DD DSN=&HLQ..FINRECON.OUTPUT.MISSING,DISP=SHR
+//RPTFILE  DD DSN=&HLQ..FINRECON.REPORT.SUMMARY,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,5),RLSE),
+//            DCB=(RECFM=FBA,LRECL=133,BLKSIZE=27930)
+//SYSOUT   DD SYSOUT=*
+/*

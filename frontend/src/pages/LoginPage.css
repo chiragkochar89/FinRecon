@@ -1,0 +1,523 @@
+/* ==============================================================================
+ * FinRecon Enterprise Finance Login Page Styling
+ * Custom CSS for 2-Column High-End Fintech Experience (Option A)
+ * ============================================================================== */
+
+.login-page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0B1730;
+  background-image: 
+    radial-gradient(ellipse at 15% 25%, rgba(37, 99, 235, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(30, 58, 138, 0.2) 0%, transparent 60%),
+    linear-gradient(180deg, #0B1730 0%, #071024 100%);
+  padding: 40px 24px;
+  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+}
+
+/* Subtle Geometric Background Overlay */
+.login-page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 64px;
+  max-width: 1140px;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+ * LEFT BRANDING PANEL
+ * -------------------------------------------------------------------------- */
+.login-left-panel {
+  flex: 1;
+  max-width: 520px;
+  color: #FFFFFF;
+}
+
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.login-brand-icon {
+  width: 54px;
+  height: 54px;
+  background: #2563EB;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.login-brand-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-brand-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #FFFFFF;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.login-brand-subtitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #94A3B8;
+  text-transform: uppercase;
+  margin: 4px 0 0 0;
+}
+
+.login-hero-headline {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin: 36px 0 0 0;
+  color: #FFFFFF;
+}
+
+.login-hero-headline .highlight {
+  color: #3B82F6;
+  display: block;
+}
+
+.login-hero-subtitle {
+  font-size: 1.05rem;
+  color: #94A3B8;
+  margin: 16px 0 0 0;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.login-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 9999px;
+  margin-top: 24px;
+}
+
+.login-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563EB;
+  box-shadow: 0 0 8px #3B82F6;
+  flex-shrink: 0;
+}
+
+.login-pill-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #93C5FD;
+  text-transform: uppercase;
+}
+
+/* Isometric Ledger & Graphics Artwork */
+.login-isometric-graphic {
+  margin-top: 40px;
+  width: 100%;
+  max-width: 440px;
+  filter: drop-shadow(0 16px 32px rgba(11, 23, 48, 0.6));
+}
+
+/* --------------------------------------------------------------------------
+ * RIGHT LOGIN CARD PANEL
+ * -------------------------------------------------------------------------- */
+.login-right-panel {
+  flex: 1;
+  max-width: 480px;
+  width: 100%;
+}
+
+.login-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 44px 40px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+}
+
+.login-card-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.login-card-subtitle {
+  font-size: 0.95rem;
+  color: #64748B;
+  margin: 0 0 26px 0;
+  font-weight: 400;
+}
+
+/* Error Banner */
+.login-alert-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #991B1B;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.login-alert-icon {
+  color: #DC2626;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Form Fields */
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-field-group {
+  margin-bottom: 18px;
+}
+
+.login-field-label {
+  display: block;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 8px;
+}
+
+.login-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.login-input-icon-left {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-input {
+  width: 100%;
+  padding: 13px 14px 13px 44px;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 0.925rem;
+  color: #0F172A;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.login-input::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.login-input.has-right-button {
+  padding-right: 46px;
+}
+
+.login-input-btn-right {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.login-input-btn-right:hover {
+  color: #334155;
+}
+
+/* Submit Button */
+.login-submit-button {
+  width: 100%;
+  padding: 13px 20px;
+  background: #1D64EC;
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  box-shadow: 0 4px 14px rgba(29, 100, 236, 0.35);
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.login-submit-button:hover:not(:disabled) {
+  background: #1550C7;
+  box-shadow: 0 6px 18px rgba(29, 100, 236, 0.45);
+}
+
+.login-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: login-spin 0.8s linear infinite;
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Demo Accounts Divider */
+.login-demo-divider {
+  display: flex;
+  align-items: center;
+  margin: 26px 0 16px 0;
+  color: #64748B;
+  font-size: 0.775rem;
+  font-weight: 600;
+}
+
+.login-demo-divider::before,
+.login-demo-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E2E8F0;
+}
+
+.login-demo-divider span {
+  padding: 0 12px;
+}
+
+/* Demo Accounts 2-Column Grid */
+.login-demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.login-demo-card {
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+/* USER Card */
+.login-demo-card.user {
+  background: #F0F7FF;
+  border-color: #D0E3FF;
+}
+
+.login-demo-card.user:hover {
+  border-color: #2563EB;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+  background: #EBF4FF;
+}
+
+.login-demo-card.user .login-demo-avatar {
+  background: #E0EFFF;
+  color: #2563EB;
+}
+
+.login-demo-card.user .login-demo-title {
+  color: #1E3A8A;
+}
+
+/* SUPERVISOR Card */
+.login-demo-card.supervisor {
+  background: #F0FDF4;
+  border-color: #DCFCE7;
+}
+
+.login-demo-card.supervisor:hover {
+  border-color: #16A34A;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
+  background: #ECFDF5;
+}
+
+.login-demo-card.supervisor .login-demo-avatar {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.login-demo-card.supervisor .login-demo-title {
+  color: #14532D;
+}
+
+.login-demo-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.login-demo-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.login-demo-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.login-demo-desc {
+  font-size: 0.68rem;
+  color: #475569;
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+/* Security Footer */
+.login-security-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  color: #64748B;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.login-security-footer svg {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * RESPONSIVENESS
+ * -------------------------------------------------------------------------- */
+@media (max-width: 959px) {
+  .login-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .login-left-panel {
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .login-brand-header {
+    justify-content: center;
+  }
+
+  .login-hero-headline {
+    font-size: 2.25rem;
+    margin-top: 24px;
+  }
+
+  .login-hero-headline .highlight {
+    display: inline;
+    margin-left: 8px;
+  }
+
+  .login-pill-badge {
+    margin: 20px auto 0 auto;
+  }
+
+  .login-isometric-graphic {
+    display: none;
+  }
+
+  .login-card {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-demo-grid {
+    grid-template-columns: 1fr;
+  }
+}

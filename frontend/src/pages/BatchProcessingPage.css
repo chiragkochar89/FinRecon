@@ -1,0 +1,260 @@
+/* ==============================================================================
+ * Batch Processing Page — Financial Control Checkpoints & Telemetry
+ * ============================================================================== */
+
+/* 1. Checkpoint Grid Layout */
+.fr-checkpoints-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1240px) {
+  .fr-checkpoints-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 880px) {
+  .fr-checkpoints-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .fr-checkpoints-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 2. Checkpoint Card */
+.fr-checkpoint-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-radius: var(--radius-lg, 8px);
+  padding: 14px 16px;
+  min-height: 154px;
+  background-color: var(--panel-bg, #FFFFFF);
+  border: 1px solid var(--border-color, #DFE1E6);
+  box-shadow: 0 1px 2px rgba(9, 30, 66, 0.04);
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fr-checkpoint-card:hover {
+  box-shadow: 0 2px 6px rgba(9, 30, 66, 0.08);
+}
+
+/* Status variants */
+.fr-checkpoint-card.status-passed {
+  background-color: var(--success-bg, #ECFDF5);
+  border-color: var(--success-border, #A7F3D0);
+}
+
+.fr-checkpoint-card.status-warning {
+  background-color: var(--warning-bg, #FFFBEB);
+  border-color: var(--warning-border, #FDE68A);
+}
+
+.fr-checkpoint-card.status-failed {
+  background-color: var(--danger-bg, #FEF2F2);
+  border-color: var(--danger-border, #FECACA);
+}
+
+.fr-checkpoint-card.status-recovered {
+  background-color: var(--info-bg, #EFF6FF);
+  border-color: var(--info-border, #BFDBFE);
+}
+
+.fr-checkpoint-card.status-halted {
+  background-color: #FEF3C7;
+  border-color: #FCD34D;
+}
+
+.fr-checkpoint-card.status-pending {
+  background-color: #F8FAFC;
+  border-color: var(--border-color, #DFE1E6);
+}
+
+/* 3. Header: Stage Title & Status Badge */
+.fr-checkpoint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  min-height: 24px;
+}
+
+.fr-checkpoint-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.fr-checkpoint-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm, 4px);
+  flex-shrink: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+.fr-checkpoint-badge.badge-passed {
+  background-color: rgba(5, 150, 105, 0.14);
+  color: var(--success-text, #065F46);
+  border: 1px solid rgba(5, 150, 105, 0.25);
+}
+
+.fr-checkpoint-badge.badge-warning {
+  background-color: rgba(217, 119, 6, 0.16);
+  color: var(--warning-text, #92400E);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.fr-checkpoint-badge.badge-failed {
+  background-color: rgba(220, 38, 38, 0.14);
+  color: var(--danger-text, #991B1B);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.fr-checkpoint-badge.badge-recovered {
+  background-color: rgba(37, 99, 235, 0.14);
+  color: var(--info-text, #1E40AF);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.fr-checkpoint-badge.badge-halted {
+  background-color: rgba(180, 83, 9, 0.14);
+  color: #B45309;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+}
+
+.fr-checkpoint-badge.badge-pending {
+  background-color: #E2E8F0;
+  color: var(--text-muted, #7A869A);
+  border: 1px solid #CBD5E1;
+}
+
+/* 4. Telemetry Metrics */
+.fr-checkpoint-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fr-checkpoint-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.fr-checkpoint-metric-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.fr-checkpoint-metric-value {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-feature-settings: "tnum";
+}
+
+/* 5. Warning / Error Details Panel */
+.fr-checkpoint-alert-panel {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  background-color: rgba(254, 243, 199, 0.75);
+  border: 1px solid #FCD34D;
+  color: #92400E;
+}
+
+.fr-checkpoint-alert-panel.panel-failed {
+  background-color: rgba(254, 226, 226, 0.75);
+  border-color: #FCA5A5;
+  color: var(--danger-text, #991B1B);
+}
+
+.fr-checkpoint-alert-panel.panel-halted {
+  background-color: rgba(254, 243, 199, 0.6);
+  border-color: #FCD34D;
+  color: #B45309;
+}
+
+.fr-checkpoint-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 0.73rem;
+  color: #78350F;
+}
+
+.fr-checkpoint-alert-header .alert-icon {
+  flex-shrink: 0;
+  color: #D97706;
+}
+
+.fr-checkpoint-exception-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 8px;
+}
+
+@media (max-width: 420px) {
+  .fr-checkpoint-exception-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fr-checkpoint-exception-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.71rem;
+  flex-wrap: wrap;
+}
+
+.fr-checkpoint-exception-item .exc-code {
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: #78350F;
+}
+
+.fr-checkpoint-exception-item .exc-count {
+  color: #92400E;
+  font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+
+.fr-checkpoint-alert-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.fr-checkpoint-alert-text .alert-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
