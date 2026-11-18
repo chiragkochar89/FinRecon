@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import router as api_router
@@ -12,6 +13,18 @@ app = FastAPI(
     version=settings.VERSION,
     description="Backend API Orchestration Layer for FinRecon Financial Reconciliation System"
 )
+
+# Custom Exception Handler for NotImplementedError (e.g. Unconfigured REAL_MAINFRAME mode)
+@app.exception_handler(NotImplementedError)
+async def not_implemented_handler(request: Request, exc: NotImplementedError):
+    return JSONResponse(
+        status_code=501,
+        content={
+            "detail": str(exc),
+            "mode": settings.FINRECON_MODE,
+            "hint": "Set FINRECON_MODE=LOCAL_DEMO to run the integrated local processing engine."
+        }
+    )
 
 # Enable Configured CORS
 app.add_middleware(
