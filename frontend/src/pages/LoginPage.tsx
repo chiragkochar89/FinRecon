@@ -267,32 +267,38 @@ export const LoginPage: React.FC = () => {
               {/* USER Demo Card */}
               <button
                 type="button"
-                onClick={() => handleFillDemo('finrecon_user', 'FinReconUser2026!')}
+                onClick={() => handleFillDemo('user', 'user123')}
                 className="login-demo-card user"
-                title="Click to fill USER demo credentials"
+                title="Click to auto-fill USER credentials (user / user123)"
               >
                 <div className="login-demo-avatar">
                   <User size={18} />
                 </div>
                 <div className="login-demo-info">
-                  <span className="login-demo-title">USER</span>
-                  <span className="login-demo-desc">Reconciliation and exception review</span>
+                  <div className="login-demo-title-row">
+                    <span className="login-demo-title">USER</span>
+                    <span className="login-demo-cred-badge">user / user123</span>
+                  </div>
+                  <span className="login-demo-desc">Operator access • Click to auto-fill</span>
                 </div>
               </button>
 
               {/* SUPERVISOR Demo Card */}
               <button
                 type="button"
-                onClick={() => handleFillDemo('finrecon_supervisor', 'FinReconSuper2026!')}
+                onClick={() => handleFillDemo('supervisor', 'super123')}
                 className="login-demo-card supervisor"
-                title="Click to fill SUPERVISOR demo credentials"
+                title="Click to auto-fill SUPERVISOR credentials (supervisor / super123)"
               >
                 <div className="login-demo-avatar">
                   <ShieldCheck size={18} />
                 </div>
                 <div className="login-demo-info">
-                  <span className="login-demo-title">SUPERVISOR</span>
-                  <span className="login-demo-desc">Oversight, resolution and reporting</span>
+                  <div className="login-demo-title-row">
+                    <span className="login-demo-title">SUPERVISOR</span>
+                    <span className="login-demo-cred-badge">supervisor / super123</span>
+                  </div>
+                  <span className="login-demo-desc">Full supervisor access • Click to auto-fill</span>
                 </div>
               </button>
             </div>

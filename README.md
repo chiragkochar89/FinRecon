@@ -168,8 +168,8 @@ FinRecon enforces end-to-end security and server-side Role-Based Access Control 
   - **`SUPERVISOR` Role**: Full operational privileges, including case resolution/rejection and generating auditor reports.
 - **Server-Side Enforcement**: Unauthenticated requests receive `HTTP 401 Unauthorized`. Restricted operational transitions or export attempts by `USER`/`ANALYST` are rejected with `HTTP 403 Forbidden` and logged as `SECURITY_DENIED` audit events.
 - **Local Demonstration Credentials**:
-  - Operational User: `finrecon_user` / `FinReconUser2026!` (Role: `USER`, mapped to `ANALYST`)
-  - Supervisor: `finrecon_supervisor` / `FinReconSuper2026!` (Role: `SUPERVISOR`)
+  - Quick Demo User: `user` / `user123` *(or `finrecon_user` / `FinReconUser2026!`)* (Role: `USER`, mapped to `ANALYST`)
+  - Quick Demo Supervisor: `supervisor` / `super123` *(or `finrecon_supervisor` / `FinReconSuper2026!`)* (Role: `SUPERVISOR`)
   > [!NOTE]
   > These credentials are local demonstration credentials intended strictly for local evaluation and automated testing. They are provisioned automatically via `backend/scripts/bootstrap_users.py`.
 - **Security Response Headers**: HTTP responses enforce `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`, `Referrer-Policy: strict-origin-when-cross-origin`, and legacy `X-XSS-Protection: 1; mode=block` headers.
@@ -371,9 +371,9 @@ npm run dev
 Open your browser to: **[`http://localhost:5173`](http://localhost:5173)**
 
 > [!NOTE]
-> The frontend automatically routes unauthenticated sessions to the enterprise login screen (`/login`). You can log in using either pre-seeded local demo account:
-> - **Operational User / Analyst**: `finrecon_user` / `FinReconUser2026!`
-> - **Supervisor**: `finrecon_supervisor` / `FinReconSuper2026!`
+> The frontend automatically routes unauthenticated sessions to the enterprise login screen (`/login`). You can log in using either quick demo account or click the demo cards to auto-fill:
+> - **Operational User / Analyst**: `user` / `user123` *(or `finrecon_user` / `FinReconUser2026!`)*
+> - **Supervisor**: `supervisor` / `super123` *(or `finrecon_supervisor` / `FinReconSuper2026!`)*
 
 ---
 
